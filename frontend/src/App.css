@@ -1,0 +1,282 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f4f7fb;
+    color: #1e293b;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 18px;
+    background: #dc2626;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #b91c1c;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.dashboard {
+    max-width: 1200px;
+    margin: auto;
+    padding: 32px 24px;
+    min-height: 100vh;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    background: #111827;
+    color: white;
+    padding: 32px;
+    border-radius: 18px;
+    margin-bottom: 28px;
+}
+
+.eyebrow {
+    color: #fca5a5;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.dashboard-header h1 {
+    font-size: clamp(24px, 4vw, 36px);
+    margin: 12px 0;
+}
+
+.subtitle {
+    color: #cbd5e1;
+    margin-bottom: 0;
+}
+
+.header-icon {
+    font-size: 52px;
+}
+
+.login-panel,
+.stat-card,
+.assignment-card,
+.empty-state {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 4px 14px #0f172a08;
+}
+
+.login-panel {
+    max-width: 480px;
+    margin: 70px auto;
+    text-align: center;
+}
+
+.login-panel p,
+.section-heading p {
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 36px;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-card span,
+.details-grid span,
+.pickup-address span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.stat-card strong {
+    font-size: 32px;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.section-heading h2 {
+    margin-bottom: 8px;
+}
+
+.secondary-button {
+    background: white;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+
+.secondary-button:hover {
+    background: #e2e8f0;
+}
+
+.assignment-list {
+    display: grid;
+    gap: 18px;
+}
+
+.assignment-card {
+    padding: 24px;
+}
+
+.assignment-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.assignment-label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.assignment-top h3 {
+    font-size: 22px;
+    margin: 10px 0 0;
+}
+
+.status {
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-accepted {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    padding: 20px 0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.details-grid div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-wrap: anywhere;
+}
+
+.pickup-address {
+    padding: 20px 0 8px;
+}
+
+.pickup-address p {
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.description {
+    color: #475569;
+    line-height: 1.6;
+    margin: 14px 0 20px;
+}
+
+.assignment-card > button {
+    margin-top: 18px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 48px 20px;
+}
+
+.empty-state span {
+    font-size: 44px;
+}
+
+.empty-state p {
+    color: #64748b;
+}
+
+.message {
+    margin-top: 24px;
+    color: #475569;
+    text-align: center;
+}
+
+footer {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 48px;
+    padding-bottom: 16px;
+}
+
+@media (max-width: 700px) {
+    .dashboard {
+        padding: 16px;
+    }
+
+    .dashboard-header {
+        padding: 24px 18px;
+    }
+
+    .header-icon {
+        font-size: 36px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
