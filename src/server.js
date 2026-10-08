@@ -1,6 +1,25 @@
+const http = require("http");
+const { Server } = require("socket.io");
+
 const app = require("./app");
 const { PORT } = require("./config");
 const db = require("./db");
+
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*"
+    }
+});
+
+io.on("connection", (socket) => {
+    console.log("WebSocket client connected:", socket.id);
+
+    socket.on("disconnect", () => {
+        console.log("WebSocket client disconnected:", socket.id);
+    });
+});
 
 async function startServer() {
     try {
@@ -8,7 +27,7 @@ async function startServer() {
 
         console.log("MySQL connected successfully");
 
-        app.listen(PORT, () => {
+        httpServer.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
         });
     } catch (error) {
