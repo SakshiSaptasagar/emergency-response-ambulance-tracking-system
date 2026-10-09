@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const SOCKET_URL = "http://localhost:5000";
+const SOCKET_URL = "https://emergency-response-backend-gf1v.onrender.com";
 
 const ambulanceIcon = L.divIcon({
     className: "ambulance-marker",
