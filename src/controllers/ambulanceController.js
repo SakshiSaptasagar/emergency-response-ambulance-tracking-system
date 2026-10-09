@@ -21,7 +21,7 @@ const addAmbulance = async (req, res) => {
             [vehicle_number]
         );
 
-        if (existing.length > 0) {
+        if (existing.length) {
             return res.status(409).json({
                 message: "Ambulance already exists"
             });
@@ -33,54 +33,47 @@ const addAmbulance = async (req, res) => {
                 [driver_id]
             );
 
-            if (driver.length === 0 || driver[0].role !== "DRIVER") {
-                return res.status(400).json({
-                    message: "Invalid driver"
-                });
+            if (!driver.length || driver[0].role !== "DRIVER") {
+                return res.status(400).json({ message: "Invalid driver" });
             }
         }
 
         const [result] = await db.query(
             `INSERT INTO ambulances
-            (vehicle_number, driver_id, ambulance_type, latitude, longitude)
-            VALUES (?, ?, ?, ?, ?)`,
+             (vehicle_number, driver_id, ambulance_type, latitude, longitude)
+             VALUES (?, ?, ?, ?, ?)`,
             [
                 vehicle_number,
                 driver_id || null,
                 ambulance_type,
-                latitude || null,
-                longitude || null
+                latitude ?? null,
+                longitude ?? null
             ]
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             message: "Ambulance added successfully",
             ambulanceId: result.insertId
         });
-
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+        console.error("ADD AMBULANCE ERROR:", error);
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
 const getAllAmbulances = async (req, res) => {
     try {
         const [ambulances] = await db.query(
-            `SELECT
-                a.*,
-                u.name AS driver_name,
-                u.phone AS driver_phone
+            `SELECT a.*, u.name AS driver_name, u.phone AS driver_phone
              FROM ambulances a
              LEFT JOIN users u ON a.driver_id = u.id
              ORDER BY a.created_at DESC`
         );
 
-        res.json({ ambulances });
-
+        return res.json({ ambulances });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+        console.error("GET AMBULANCES ERROR:", error);
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -100,10 +93,8 @@ const assignDriverToAmbulance = async (req, res) => {
             [driver_id]
         );
 
-        if (driver.length === 0 || driver[0].role !== "DRIVER") {
-            return res.status(400).json({
-                message: "Invalid driver"
-            });
+        if (!driver.length || driver[0].role !== "DRIVER") {
+            return res.status(400).json({ message: "Invalid driver" });
         }
 
         const [ambulance] = await db.query(
@@ -111,10 +102,8 @@ const assignDriverToAmbulance = async (req, res) => {
             [id]
         );
 
-        if (ambulance.length === 0) {
-            return res.status(404).json({
-                message: "Ambulance not found"
-            });
+        if (!ambulance.length) {
+            return res.status(404).json({ message: "Ambulance not found" });
         }
 
         await db.query(
@@ -122,13 +111,12 @@ const assignDriverToAmbulance = async (req, res) => {
             [driver_id, id]
         );
 
-        res.json({
+        return res.json({
             message: "Driver assigned to ambulance successfully"
         });
-
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+        console.error("ASSIGN DRIVER ERROR:", error);
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -148,39 +136,34 @@ const updateAmbulanceLocation = async (req, res) => {
             [id]
         );
 
-        if (ambulance.length === 0) {
-            return res.status(404).json({
-                message: "Ambulance not found"
-            });
+        if (!ambulance.length) {
+            return res.status(404).json({ message: "Ambulance not found" });
         }
 
-        if (ambulance[0].driver_id !== req.user.id) {
+        if (Number(ambulance[0].driver_id) !== Number(req.user.id)) {
             return res.status(403).json({
                 message: "You are not assigned to this ambulance"
             });
         }
 
         await db.query(
-            `UPDATE ambulances
-             SET latitude = ?, longitude = ?
-             WHERE id = ?`,
+            "UPDATE ambulances SET latitude = ?, longitude = ? WHERE id = ?",
             [latitude, longitude, id]
         );
 
         await db.query(
             `INSERT INTO ambulance_locations
-            (ambulance_id, latitude, longitude)
-            VALUES (?, ?, ?)`,
+             (ambulance_id, latitude, longitude)
+             VALUES (?, ?, ?)`,
             [id, latitude, longitude]
         );
 
-        res.json({
+        return res.json({
             message: "Ambulance location updated successfully"
         });
-
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+        console.error("UPDATE LOCATION ERROR:", error);
+        return res.status(500).json({ message: "Server error" });
     }
 };
 

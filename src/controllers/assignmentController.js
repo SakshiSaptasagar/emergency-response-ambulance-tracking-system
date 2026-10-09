@@ -1,4 +1,3 @@
-
 const db = require("../db");
 
 const getAssignments = async (req, res) => {
@@ -16,66 +15,52 @@ const getAssignments = async (req, res) => {
         return res.status(200).json({ assignments });
     } catch (error) {
         console.error("GET ASSIGNMENTS ERROR:", error);
-        return res.status(500).json({
-            message: error.message,
-            code: error.code
-        });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
 const getDriverAssignments = async (req, res) => {
     try {
-        const driverId = Number(req.user.id);
-
         const [assignments] = await db.query(
             `SELECT a.id, a.emergency_id, a.ambulance_id,
                     a.status, a.assigned_at, a.accepted_at,
                     a.completed_at, amb.vehicle_number,
                     amb.ambulance_type AS ambulance_type,
-                    e.emergency_type AS emergency_type,
-                    e.description,
-                    e.priority,
+                    e.emergency_type, e.description, e.priority,
                     e.pickup_address
              FROM assignments a
              JOIN ambulances amb ON amb.id = a.ambulance_id
              JOIN emergency_requests e ON e.id = a.emergency_id
              WHERE amb.driver_id = ?
              ORDER BY a.id DESC`,
-            [driverId]
+            [Number(req.user.id)]
         );
 
         return res.status(200).json({ assignments });
     } catch (error) {
         console.error("DRIVER ASSIGNMENTS ERROR:", error);
-
-        return res.status(500).json({
-            message: error.message,
-            code: error.code
-        });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
 const acceptAssignment = async (req, res) => {
     try {
-        const assignmentId = req.params.id;
-        const driverId = Number(req.user.id);
-
         const [rows] = await db.query(
             `SELECT a.id, a.emergency_id, a.ambulance_id,
                     a.status, amb.driver_id
              FROM assignments a
              JOIN ambulances amb ON amb.id = a.ambulance_id
              WHERE a.id = ?`,
-            [assignmentId]
+            [req.params.id]
         );
 
-        if (rows.length === 0) {
+        if (!rows.length) {
             return res.status(404).json({ message: "Assignment not found" });
         }
 
         const assignment = rows[0];
 
-        if (Number(assignment.driver_id) !== driverId) {
+        if (Number(assignment.driver_id) !== Number(req.user.id)) {
             return res.status(403).json({ message: "Access denied" });
         }
 
@@ -85,11 +70,11 @@ const acceptAssignment = async (req, res) => {
             });
         }
 
+        const now = new Date().toISOString();
+
         await db.query(
-            `UPDATE assignments
-             SET status = 'ACCEPTED', accepted_at = NOW()
-             WHERE id = ?`,
-            [assignmentId]
+            "UPDATE assignments SET status = 'ACCEPTED', accepted_at = ? WHERE id = ?",
+            [now, req.params.id]
         );
 
         await db.query(
@@ -107,35 +92,28 @@ const acceptAssignment = async (req, res) => {
         });
     } catch (error) {
         console.error("ACCEPT ASSIGNMENT ERROR:", error);
-
-        return res.status(500).json({
-            message: error.message,
-            code: error.code
-        });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
 const completeAssignment = async (req, res) => {
     try {
-        const assignmentId = req.params.id;
-        const driverId = Number(req.user.id);
-
         const [rows] = await db.query(
             `SELECT a.id, a.emergency_id, a.ambulance_id,
                     a.status, amb.driver_id
              FROM assignments a
              JOIN ambulances amb ON amb.id = a.ambulance_id
              WHERE a.id = ?`,
-            [assignmentId]
+            [req.params.id]
         );
 
-        if (rows.length === 0) {
+        if (!rows.length) {
             return res.status(404).json({ message: "Assignment not found" });
         }
 
         const assignment = rows[0];
 
-        if (Number(assignment.driver_id) !== driverId) {
+        if (Number(assignment.driver_id) !== Number(req.user.id)) {
             return res.status(403).json({ message: "Access denied" });
         }
 
@@ -145,11 +123,11 @@ const completeAssignment = async (req, res) => {
             });
         }
 
+        const now = new Date().toISOString();
+
         await db.query(
-            `UPDATE assignments
-             SET status = 'COMPLETED', completed_at = NOW()
-             WHERE id = ?`,
-            [assignmentId]
+            "UPDATE assignments SET status = 'COMPLETED', completed_at = ? WHERE id = ?",
+            [now, req.params.id]
         );
 
         await db.query(
@@ -167,11 +145,7 @@ const completeAssignment = async (req, res) => {
         });
     } catch (error) {
         console.error("COMPLETE ASSIGNMENT ERROR:", error);
-
-        return res.status(500).json({
-            message: error.message,
-            code: error.code
-        });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 

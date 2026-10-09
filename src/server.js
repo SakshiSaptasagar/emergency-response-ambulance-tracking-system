@@ -66,7 +66,6 @@ io.on("connection", (socket) => {
       };
 
       io.emit("ambulance:location:update", locationUpdate);
-
       console.log("Ambulance location updated:", locationUpdate);
     } catch (error) {
       console.error("LOCATION UPDATE ERROR:", error.message);
@@ -85,10 +84,9 @@ io.on("connection", (socket) => {
 async function startServer() {
   try {
     await db.query("SELECT 1");
+    console.log("SQLite connected successfully");
 
-    console.log("MySQL connected successfully");
-
-    httpServer.listen(PORT, () => {
+    httpServer.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
