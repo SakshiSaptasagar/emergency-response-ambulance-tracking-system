@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "https://emergency-response-backend-gf1v.onrender.com";
+const API = import.meta.env.VITE_API_URL || "https://emergency-response-backend-gf1v.onrender.com";
 
 export default function AdminDashboard() {
     const [token, setToken] = useState("");

@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API = "https://emergency-response-backend-gf1v.onrender.com";
+const API = import.meta.env.VITE_API_URL || "https://emergency-response-backend-gf1v.onrender.com";
 
 export default function DriverDashboard() {
     const [token, setToken] = useState("");
