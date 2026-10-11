@@ -1,5 +1,6 @@
 const Database = require("better-sqlite3");
 const path = require("path");
+const bcrypt = require("bcrypt");
 
 const db = new Database(
     path.join(__dirname, "..", "emergency_response.db")
@@ -61,6 +62,25 @@ CREATE TABLE IF NOT EXISTS ambulance_locations (
     recorded_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 `);
+
+function seedUser(name, email, password, role) {
+    const existing = db
+        .prepare("SELECT id FROM users WHERE email = ?")
+        .get(email);
+
+    if (!existing) {
+        const hashedPassword = bcrypt.hashSync(password, 10);
+
+        db.prepare(`
+            INSERT INTO users (name, email, password, role)
+            VALUES (?, ?, ?, ?)
+        `).run(name, email, hashedPassword, role);
+    }
+}
+
+// Create demo accounts if they do not already exist.
+seedUser("Admin", "admin@test.com", "Admin@123", "ADMIN");
+seedUser("Driver", "driver@test.com", "Driver@123", "DRIVER");
 
 db.query = async (sql, params = []) => {
     const statement = db.prepare(sql);
