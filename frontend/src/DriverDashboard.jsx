@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API = "http://localhost:5000";
+const API = "https://emergency-response-backend-gf1v.onrender.com";
 
 export default function DriverDashboard() {
     const [token, setToken] = useState("");
@@ -22,10 +21,21 @@ export default function DriverDashboard() {
             });
 
             const newToken = response.data.token;
+
+            if (!newToken) {
+                setMessage("Login failed: no authentication token received.");
+                return;
+            }
+
             setToken(newToken);
             await loadAssignments(newToken);
         } catch (error) {
-            setMessage(error.response?.data?.message || "Login failed.");
+            setMessage(
+                error.response?.data?.message ||
+                (error.response
+                    ? `Login failed (HTTP ${error.response.status}).`
+                    : "Cannot connect to the backend. Please try again.")
+            );
         } finally {
             setLoading(false);
         }
@@ -49,7 +59,7 @@ export default function DriverDashboard() {
         } catch (error) {
             setMessage(
                 error.response?.data?.message ||
-                "Failed to load assignments."
+                `Failed to load assignments${error.response ? ` (HTTP ${error.response.status})` : ". Check your connection."}`
             );
         } finally {
             setLoading(false);
@@ -70,12 +80,12 @@ export default function DriverDashboard() {
                 }
             );
 
-            setMessage(response.data.message);
+            setMessage(response.data.message || "Assignment updated.");
             await loadAssignments();
         } catch (error) {
             setMessage(
                 error.response?.data?.message ||
-                "Failed to update assignment."
+                `Failed to update assignment${error.response ? ` (HTTP ${error.response.status})` : "."}`
             );
         } finally {
             setLoading(false);
@@ -104,7 +114,9 @@ export default function DriverDashboard() {
             {!token ? (
                 <section className="login-panel">
                     <h2>Driver Login</h2>
-                    <p>Sign in to view and manage your ambulance assignments.</p>
+                    <p>
+                        Sign in to view and manage your ambulance assignments.
+                    </p>
                     <button onClick={login} disabled={loading}>
                         {loading ? "Please wait..." : "Login as Driver"}
                     </button>
@@ -129,7 +141,9 @@ export default function DriverDashboard() {
                     <div className="section-heading">
                         <div>
                             <h2>My Assignments</h2>
-                            <p>Review emergency details and update progress.</p>
+                            <p>
+                                Review emergency details and update progress.
+                            </p>
                         </div>
                         <button
                             className="secondary-button"
@@ -148,12 +162,19 @@ export default function DriverDashboard() {
                                         <span className="assignment-label">
                                             ASSIGNMENT #{item.id}
                                         </span>
-                                        <h3>{item.emergency_type || "Emergency"}</h3>
+                                        <h3>
+                                            {item.emergency_type || "Emergency"}
+                                        </h3>
                                     </div>
                                     <span
-                                        className={`status status-${String(item.status).toLowerCase()}`}
+                                        className={`status status-${String(
+                                            item.status || "pending"
+                                        ).toLowerCase()}`}
                                     >
-                                        {item.status.replace("_", " ")}
+                                        {String(item.status || "PENDING").replace(
+                                            "_",
+                                            " "
+                                        )}
                                     </span>
                                 </div>
 
@@ -164,11 +185,15 @@ export default function DriverDashboard() {
                                     </div>
                                     <div>
                                         <span>Ambulance</span>
-                                        <strong>{item.vehicle_number}</strong>
+                                        <strong>
+                                            {item.vehicle_number || "—"}
+                                        </strong>
                                     </div>
                                     <div>
                                         <span>Ambulance Type</span>
-                                        <strong>{item.ambulance_type}</strong>
+                                        <strong>
+                                            {item.ambulance_type || "—"}
+                                        </strong>
                                     </div>
                                     <div>
                                         <span>Priority</span>
@@ -178,16 +203,23 @@ export default function DriverDashboard() {
 
                                 <div className="pickup-address">
                                     <span>Pickup Location</span>
-                                    <p>{item.pickup_address || "Address unavailable"}</p>
+                                    <p>
+                                        {item.pickup_address ||
+                                            "Address unavailable"}
+                                    </p>
                                 </div>
 
                                 {item.description && (
-                                    <p className="description">{item.description}</p>
+                                    <p className="description">
+                                        {item.description}
+                                    </p>
                                 )}
 
                                 {item.status === "PENDING" && (
                                     <button
-                                        onClick={() => updateAssignment(item.id, "accept")}
+                                        onClick={() =>
+                                            updateAssignment(item.id, "accept")
+                                        }
                                         disabled={loading}
                                     >
                                         Accept Assignment
@@ -196,7 +228,9 @@ export default function DriverDashboard() {
 
                                 {item.status === "ACCEPTED" && (
                                     <button
-                                        onClick={() => updateAssignment(item.id, "complete")}
+                                        onClick={() =>
+                                            updateAssignment(item.id, "complete")
+                                        }
                                         disabled={loading}
                                     >
                                         Complete Assignment
@@ -218,7 +252,9 @@ export default function DriverDashboard() {
 
             {message && <p className="message">{message}</p>}
 
-            <footer>Emergency Response & Ambulance Tracking System</footer>
+            <footer>
+                Emergency Response &amp; Ambulance Tracking System
+            </footer>
         </main>
     );
 }

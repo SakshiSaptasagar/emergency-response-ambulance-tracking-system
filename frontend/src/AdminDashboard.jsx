@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "http://localhost:5000";
+const API = "https://emergency-response-backend-gf1v.onrender.com";
 
 export default function AdminDashboard() {
     const [token, setToken] = useState("");
@@ -14,33 +13,42 @@ export default function AdminDashboard() {
     const [password, setPassword] = useState("Admin@123");
     const [loading, setLoading] = useState(false);
 
-    const [form, setForm] = useState({
-        emergencyId: "",
-        ambulanceId: "",
-    });
-
     const request = (path, options = {}) =>
         axios({
             url: `${API}${path}`,
             ...options,
             headers: {
-                Authorization: `Bearer ${token}`,
                 ...options.headers,
+                Authorization: `Bearer ${token}`,
             },
         });
 
     const login = async (event) => {
         event.preventDefault();
+
         try {
             setLoading(true);
+            setMessage("");
+
             const response = await axios.post(`${API}/api/auth/login`, {
                 email,
                 password,
             });
+
+            if (!response.data?.token) {
+                setMessage("Login failed: the server did not return a token.");
+                return;
+            }
+
             setToken(response.data.token);
             setMessage("Login successful. Loading dashboard...");
         } catch (error) {
-            setMessage(error.response?.data?.message || "Login failed.");
+            setMessage(
+                error.response?.data?.message ||
+                (error.response
+                    ? `Login failed (HTTP ${error.response.status}).`
+                    : "Cannot connect to the backend. Please try again.")
+            );
         } finally {
             setLoading(false);
         }
@@ -49,6 +57,7 @@ export default function AdminDashboard() {
     const loadDashboard = async () => {
         try {
             setLoading(true);
+
             const [e, a, s] = await Promise.all([
                 request("/api/emergency/all"),
                 request("/api/ambulances"),
@@ -62,7 +71,7 @@ export default function AdminDashboard() {
         } catch (error) {
             setMessage(
                 error.response?.data?.message ||
-                "Could not load dashboard data."
+                `Could not load dashboard data${error.response ? ` (HTTP ${error.response.status})` : ". Check your internet connection."}`
             );
         } finally {
             setLoading(false);
@@ -70,21 +79,10 @@ export default function AdminDashboard() {
     };
 
     useEffect(() => {
-        if (token) loadDashboard();
-    }, [token]);
-
-    const assignAmbulance = async (event) => {
-        event.preventDefault();
-
-        if (!form.emergencyId || !form.ambulanceId) {
-            setMessage("Select an emergency and an ambulance.");
-            return;
+        if (token) {
+            loadDashboard();
         }
-
-        setMessage(
-            "Your current assignment API does not yet provide an assignment-creation route. The existing assignments are shown below."
-        );
-    };
+    }, [token]);
 
     if (!token) {
         return (
@@ -102,6 +100,7 @@ export default function AdminDashboard() {
 
                 <form className="login-panel" onSubmit={login}>
                     <h2>Administrator Login</h2>
+
                     <label>
                         Email
                         <input
@@ -111,6 +110,7 @@ export default function AdminDashboard() {
                             required
                         />
                     </label>
+
                     <label>
                         Password
                         <input
@@ -120,9 +120,11 @@ export default function AdminDashboard() {
                             required
                         />
                     </label>
-                    <button disabled={loading}>
+
+                    <button type="submit" disabled={loading}>
                         {loading ? "Signing in..." : "Login"}
                     </button>
+
                     {message && <p>{message}</p>}
                 </form>
             </main>
@@ -147,10 +149,12 @@ export default function AdminDashboard() {
                     <span>Emergency Requests</span>
                     <strong>{emergencies.length}</strong>
                 </div>
+
                 <div className="stat-card">
                     <span>Ambulances</span>
                     <strong>{ambulances.length}</strong>
                 </div>
+
                 <div className="stat-card">
                     <span>Assignments</span>
                     <strong>{assignments.length}</strong>
@@ -162,12 +166,14 @@ export default function AdminDashboard() {
                     <h2>Emergency Requests</h2>
                     <p>Review requests received by the system.</p>
                 </div>
+
                 <button
+                    type="button"
                     className="secondary-button"
                     onClick={loadDashboard}
                     disabled={loading}
                 >
-                    ↻ Refresh
+                    {loading ? "Loading..." : "↻ Refresh"}
                 </button>
             </div>
 
@@ -181,15 +187,18 @@ export default function AdminDashboard() {
                                 </span>
                                 <h3>{item.emergency_type || "Emergency"}</h3>
                             </div>
+
                             <span className="status status-pending">
-                                {item.status}
+                                {item.status || "PENDING"}
                             </span>
                         </div>
-                        <p><strong>Priority:</strong> {item.priority}</p>
-                        <p><strong>Location:</strong> {item.pickup_address}</p>
-                        <p>{item.description}</p>
+
+                        <p><strong>Priority:</strong> {item.priority || "HIGH"}</p>
+                        <p><strong>Location:</strong> {item.pickup_address || "Not provided"}</p>
+                        <p>{item.description || "No additional description."}</p>
                     </article>
                 ))}
+
                 {emergencies.length === 0 && (
                     <p>No emergency requests found.</p>
                 )}
@@ -208,9 +217,13 @@ export default function AdminDashboard() {
                         <h3>{item.vehicle_number}</h3>
                         <p><strong>Type:</strong> {item.ambulance_type}</p>
                         <p><strong>Status:</strong> {item.status}</p>
-                        <p><strong>Driver ID:</strong> {item.driver_id ?? "Not assigned"}</p>
+                        <p>
+                            <strong>Driver ID:</strong>{" "}
+                            {item.driver_id ?? "Not assigned"}
+                        </p>
                     </article>
                 ))}
+
                 {ambulances.length === 0 && <p>No ambulances found.</p>}
             </section>
 
@@ -226,14 +239,26 @@ export default function AdminDashboard() {
                     <article className="assignment-card" key={item.id}>
                         <div className="assignment-top">
                             <h3>Assignment #{item.id}</h3>
-                            <span className={`status status-${String(item.status).toLowerCase()}`}>
-                                {item.status}
+
+                            <span
+                                className={`status status-${String(
+                                    item.status || "pending"
+                                ).toLowerCase()}`}
+                            >
+                                {item.status || "PENDING"}
                             </span>
                         </div>
-                        <p><strong>Emergency ID:</strong> {item.emergency_id}</p>
-                        <p><strong>Ambulance:</strong> {item.vehicle_number}</p>
+
+                        <p>
+                            <strong>Emergency ID:</strong> {item.emergency_id}
+                        </p>
+                        <p>
+                            <strong>Ambulance:</strong>{" "}
+                            {item.vehicle_number || item.ambulance_id}
+                        </p>
                     </article>
                 ))}
+
                 {assignments.length === 0 && <p>No assignments found.</p>}
             </section>
 
