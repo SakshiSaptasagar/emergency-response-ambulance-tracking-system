@@ -64,21 +64,18 @@ CREATE TABLE IF NOT EXISTS ambulance_locations (
 `);
 
 function seedUser(name, email, password, role) {
-    const existing = db
-        .prepare("SELECT id FROM users WHERE email = ?")
-        .get(email);
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
-    if (!existing) {
-        const hashedPassword = bcrypt.hashSync(password, 10);
-
-        db.prepare(`
-            INSERT INTO users (name, email, password, role)
-            VALUES (?, ?, ?, ?)
-        `).run(name, email, hashedPassword, role);
-    }
+    db.prepare(`
+        INSERT INTO users (name, email, password, role)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(email) DO UPDATE SET
+            name = excluded.name,
+            password = excluded.password,
+            role = excluded.role
+    `).run(name, email, hashedPassword, role);
 }
 
-// Create demo accounts if they do not already exist.
 seedUser("Admin", "admin@test.com", "Admin@123", "ADMIN");
 seedUser("Driver", "driver@test.com", "Driver@123", "DRIVER");
 
